@@ -1,0 +1,83 @@
+﻿services:
+  tangerineauction.server:
+    image: tangerineauction.server
+    build:
+      context: .
+      dockerfile: TangerineAuction.Server/Dockerfile
+    depends_on:
+      - rabbitmq
+      - redis
+      - keycloak
+      - jaeger
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4317"
+
+  tangerineauction.client:
+    image: tangerineauction.client
+    build:
+      context: .
+      dockerfile: tangerineauction.client/Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://keycloak:8080/}
+        VITE_KEYCLOAK_REALM: ${VITE_KEYCLOAK_REALM:-tangerine_auction}
+        VITE_KEYCLOAK_CLIENTID: ${VITE_KEYCLOAK_CLIENTID:-public-client}
+    ports:
+      - "58708:58708"
+    depends_on:
+      - keycloak
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak_tangerine_auction
+    command: start-dev
+    environment:
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://host.docker.internal:5432/TangerineAuction
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "16686:16686"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - my_network
+  
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - my_network
+
+volumes:
+  keycloak_data:
+
+networks:
+  my_network:
+    driver: bridge

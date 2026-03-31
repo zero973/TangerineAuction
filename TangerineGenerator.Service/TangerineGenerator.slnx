@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="TangerineGenerator.Core/TangerineGenerator.Core.csproj" />
+  <Project Path="TangerineGenerator.Infrastructure/TangerineGenerator.Infrastructure.csproj" />
+  <Project Path="TangerineGenerator.Service/TangerineGenerator.Service.csproj" />
+  <Project Path="TangerineGenerator.Shared/TangerineGenerator.Shared.csproj" />
+  <Project Path="TangerineGenerator.Tests/TangerineGenerator.Tests.csproj" />
+</Solution>

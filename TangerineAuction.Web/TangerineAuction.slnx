@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
+  <Project Path="tangerineauction.client/tangerineauction.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="TangerineAuction.Core/TangerineAuction.Core.csproj" />
+  <Project Path="TangerineAuction.Infrastructure/TangerineAuction.Infrastructure.csproj" />
+  <Project Path="TangerineAuction.Server/TangerineAuction.Server.csproj" />
+  <Project Path="TangerineAuction.Shared/TangerineAuction.Shared.csproj" />
+  <Project Path="TangerineAuction.Tests/TangerineAuction.Tests.csproj" />
+</Solution>
