@@ -1,16 +1,16 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using HealthChecks.UI.Client;
-using Keycloak.AuthServices.Authentication;
-using Keycloak.AuthServices.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.FileProviders;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using System.Reflection;
+using TangerineAuction.Core.Modules;
 using TangerineAuction.Core.Services;
 using TangerineAuction.Infrastructure.Data.Services;
-using TangerineAuction.Server.Authorization;
 using TangerineAuction.Server.Authorization.Impl;
 using TangerineAuction.Server.Extensions;
+using TangerineAuction.Server.Jobs;
+using TangerineAuction.Server.Middlewares;
+using TangerineAuction.Server.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,11 +19,7 @@ ConfigureServices();
 
 var app = builder.Build();
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(@"D:\Pics"),
-    RequestPath = "/images"
-});
+app.UseStaticFiles();
 app.UseDefaultFiles();
 app.UseExceptionHandler();
 
@@ -45,20 +41,25 @@ app.UseResponseCompression();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard();
+app.UseCors();
 
 app.MapControllers();
+app.MapHangfireDashboard();
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => true,
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 app.MapHealthChecksUI();
+app.MapHub<AuctionHub>("/auctionHub");
 app.MapFallbackToFile("/index.html");
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
 WriteAppVersion();
 await RunMigrations();
+RunRecurringJob();
 
 app.Run();
 
@@ -66,46 +67,49 @@ void ConfigureServices()
 {
     builder.AddLogger();
     
-    builder.Services.AddExceptionHandler<TangerineAuction.Server.Middlewares.GlobalExceptionHandler>();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
     builder.Services.AddResponseCompression(opt => opt.EnableForHttps = true);
     builder.Services.AddSwaggerGenWithAuth(configuration);
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-    
-    var installers = new List<TangerineAuction.Core.Modules.IModuleInstaller>
+    builder.Services.AddHangfire((_, config) => 
+        config.UsePostgreSqlStorage(opts => 
+            opts.UseNpgsqlConnection(configuration.GetConnectionString("Postgres"))));
+    builder.Services.AddHangfireServer();
+    builder.Services.AddSignalR();
+    builder.Services.AddCors(options =>
     {
-        new TangerineAuction.Core.Modules.ModuleInstaller(),
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins("http://localhost:64229")
+                .SetIsOriginAllowed(_ => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+    });
+    
+    var installers = new List<IModuleInstaller>
+    {
+        new ModuleInstaller(),
         new TangerineAuction.Infrastructure.ModuleInstaller()
     };
 
     foreach (var installer in installers.OrderBy(x => x.Order))
         installer.Install(builder.Services, configuration);
 
-    builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
-    builder.Services.AddAuthorization(options =>
-        {
-            var admin = "Admin";
-            options.AddPolicy(Policy.AddTangerinePolicy, policy => policy.RequireRealmRoles(admin));
-            options.AddPolicy(Policy.GetTangerineGeneratorServiceVersion, policy => policy.RequireRealmRoles(admin));
-        })
-        .AddKeycloakAuthorization(configuration);
+    builder.Services.AddMediatR(cfg =>
+    {
+        cfg.RegisterServicesFromAssemblies(typeof(Program).Assembly);
+    });
     
-    // jaeger
-    builder.Services.AddOpenTelemetry()
-        .ConfigureResource(resource => resource.AddService("TangerineAuction.Server"))
-        .WithTracing(tracing =>
-        {
-            tracing
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation();
-
-            tracing.AddOtlpExporter();
-        });
+    builder.Services.AddScoped<IJobRunner, JobRunner>();
+    builder.Services.AddKeycloak(configuration);
+    builder.Services.AddJaeger();
     
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
-
     builder.Services.AddHealthChecks(configuration);
 }
 
@@ -119,4 +123,11 @@ async Task RunMigrations()
     using IServiceScope scope = app.Services.CreateScope();
     var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
     await migrationService.Migrate();
+}
+
+void RunRecurringJob()
+{
+    using IServiceScope scope = app.Services.CreateScope();
+    var jobRunner = scope.ServiceProvider.GetRequiredService<IJobRunner>();
+    jobRunner.Run();
 }

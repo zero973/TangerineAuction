@@ -5,15 +5,17 @@ namespace TangerineAuction.Core.UseCases.Microservices;
 
 public class DeleteTangerineImage
 {
-    public record Command(string FilePath) : IRequest;
+    
+    public record Command(string FileName) : IRequest;
     
     internal class Validator : AbstractValidator<Command>
     {
         public Validator()
         {
-            RuleFor(x => x.FilePath)
+            RuleFor(x => x.FileName)
                 .Must(x => !string.IsNullOrWhiteSpace(x))
-                .WithMessage("Путь к файлу не должен быть пустым");
+                .WithMessage("Название файла не должно быть пустым");
         }
     }
+    
 }

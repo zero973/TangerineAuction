@@ -16,9 +16,13 @@
         <PackageReference Include="MassTransit.Abstractions" Version="9.1.0" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" Version="9.1.0" />
         <PackageReference Include="MassTransit.RabbitMQ" Version="9.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.5" />
+        <PackageReference Include="Minio" Version="7.0.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
         <PackageReference Include="protobuf-net.Grpc" Version="1.2.2" />
         <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.2.2" />
+        <PackageReference Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.6.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.6.0" />
     </ItemGroup>
     
 </Project>

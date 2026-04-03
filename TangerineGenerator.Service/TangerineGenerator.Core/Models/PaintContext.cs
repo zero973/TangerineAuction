@@ -1,5 +1,5 @@
 ﻿using SixLabors.ImageSharp;
-using TangerineAuction.Shared;
+using TangerineAuction.Shared.Enums;
 
 namespace TangerineGenerator.Core.Models;
 

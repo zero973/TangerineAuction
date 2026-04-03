@@ -1,5 +1,5 @@
 ﻿using TangerineAuction.Core.Models;
-using TangerineAuction.Shared;
+using TangerineAuction.Shared.Enums;
 
 namespace TangerineAuction.Core.UseCases.Tangerines.Dtos;
 
@@ -24,9 +24,19 @@ public class TangerineResponse
     public decimal StartPrice { get; set; }
     
     /// <summary>
-    /// Путь к картинке
+    /// Цена выкупа
     /// </summary>
-    public string FilePath { get; set; }
+    public decimal BuyPrice { get; set; }
+    
+    /// <summary>
+    /// Название файла-картинки в хранилище
+    /// </summary>
+    public string FileName { get; set; }
+    
+    /// <summary>
+    /// Url картинки
+    /// </summary>
+    public string ImageUrl { get; set; }
 
     /// <summary>
     /// Дата создания
@@ -39,7 +49,8 @@ public class TangerineResponse
         Name = tangerine.Name;
         Quality = tangerine.Quality;
         StartPrice = tangerine.StartPrice;
-        FilePath = tangerine.FilePath;
+        BuyPrice = tangerine.BuyPrice;
+        FileName = tangerine.FileName;
         CreatedOn = tangerine.CreatedOn;
     }
     

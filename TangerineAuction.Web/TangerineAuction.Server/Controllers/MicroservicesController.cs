@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using TangerineAuction.Core.UseCases.Microservices;
 using TangerineAuction.Server.Authorization;
 using TangerineAuction.Shared;
+using TangerineAuction.Shared.Models;
 
 namespace TangerineAuction.Server.Controllers;
 

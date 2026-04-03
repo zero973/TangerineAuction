@@ -3,30 +3,11 @@ import { routes } from "@shared/routes";
 import { chainRoute } from "atomic-router";
 import { createEffect, createStore, sample, createEvent } from "effector";
 import { debounce } from "patronum";
-
-export type AuctionSearchParams = {
-    skip?: number;
-    take?: number;
-    name?: string | null;
-};
-
-export enum TangerineQuality {
-    Common = 0,
-    Uncommon = 1,
-    Rare = 2,
-    Legendary = 3,
-}
-
-export type AuctionResponse = {
-    auctionId: string;
-    auctionName: string;
-    auctionCreatedOn: string;
-    tangerineName: string;
-    tangerineQuality: TangerineQuality;
-    filePath: string;
-    lastBet: number;
-    lastUserBetId: string;
-};
+import { getLastBetFx } from "@shared/api/bets/model.ts";
+import { hubMessageReceived } from "@shared/api/signalr/model.ts";
+import { HubMessageType } from "@shared/api/contracts/hub.ts";
+import { showSuccess } from "@shared/notifications.tsx";
+import { AuctionResponse, AuctionSearchParams } from "@shared/api/contracts/auction.ts";
 
 type Pagination = { skip: number; take: number };
 
@@ -45,7 +26,30 @@ export const searchAuctions = createEvent<AuctionSearchParams>();
 export const goNextPage = createEvent();
 export const goPrevPage = createEvent();
 
-export const $auctions = createStore<AuctionResponse[]>([]).on(getAuctions.doneData, (_, p) => p);
+export const $auctions = createStore<AuctionResponse[]>([])
+    .on(getAuctions.doneData, (_, p) => p)
+    .on(getLastBetFx.doneData, (auctions, { id, bet }) =>
+        auctions.map((auction) =>
+            auction.auctionId === id
+                ? {
+                    ...auction,
+                    lastBet: bet.price,
+                    lastUserBetId: bet.createdBy,
+                }
+                : auction
+        )
+    )
+    .on(hubMessageReceived, (auctions, msg) => {
+        if (msg.type !== HubMessageType.AuctionFinished) {
+            return auctions;
+        }
+
+        return auctions.map((auction) =>
+            auction.auctionId === msg.entityId
+                ? { ...auction, isActual: false }
+                : auction
+        );
+    });
 
 export const $pagination = createStore<{ skip: number; take: number }>({ skip: 0, take: 10 })
     .on(searchAuctions, (_, payload) => ({ skip: payload.skip ?? 0, take: payload.take ?? 10 }))
@@ -59,10 +63,31 @@ sample({
         return {
             skip: payload?.skip ?? page.skip,
             take: payload?.take ?? page.take,
-            name: payload?.name ?? null,
+            auctionName: payload?.auctionName ?? null,
+            tangerineName: payload?.tangerineName ?? null,
+            tangerineQuality: payload?.tangerineQuality ? Number(payload.tangerineQuality)-1 : null,
+            showFinishedAuctions: payload?.showFinishedAuctions ?? false,
+            isCurrentUserWinner: payload?.isCurrentUserWinner ?? false,
         };
     },
     target: getAuctions,
+});
+
+sample({
+    clock: hubMessageReceived,
+    source: $auctions,
+    filter: (auctions, msg) =>
+        msg.type === HubMessageType.NewBetAdded &&
+        auctions.some((auction) => auction.auctionId === msg.entityId),
+    fn: (_, msg) => msg.entityId,
+    target: getLastBetFx,
+});
+
+sample({
+    clock: hubMessageReceived,
+    filter: (msg) => msg.type === HubMessageType.AuctionAdded,
+    fn: () => "Создан новый аукцион",
+    target: showSuccess,
 });
 
 chainRoute({

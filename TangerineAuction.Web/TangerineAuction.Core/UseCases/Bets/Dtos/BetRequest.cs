@@ -16,17 +16,12 @@ public class BetRequest
     /// <summary>
     /// Кто сделал ставку
     /// </summary>
-    public Guid? CreatedBy { get; private set; }
+    public Guid? CreatedBy { get; set; }
 
     public BetRequest(Guid auctionId, decimal price)
     {
         AuctionId = auctionId;
         Price = price;
-    }
-
-    public void SetCreatedBy(Guid userId)
-    {
-        CreatedBy = userId;
     }
     
 }

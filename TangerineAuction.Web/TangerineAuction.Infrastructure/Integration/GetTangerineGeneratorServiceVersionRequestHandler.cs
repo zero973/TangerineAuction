@@ -1,12 +1,12 @@
 ﻿using Ardalis.Result;
 using MediatR;
 using TangerineAuction.Core.UseCases.Microservices;
-using TangerineAuction.Shared;
+using TangerineAuction.Shared.Models;
 using TangerineGenerator.Shared;
 
 namespace TangerineAuction.Infrastructure.Integration;
 
-internal class GetTangerineGeneratorServiceVersionHandler(ITangerineGeneratorService generatorService) 
+internal class GetTangerineGeneratorServiceVersionRequestHandler(ITangerineGeneratorService generatorService) 
     : IRequestHandler<GetTangerineGeneratorServiceVersion.Query, Result<VersionInfo>>
 {
     public async Task<Result<VersionInfo>> Handle(GetTangerineGeneratorServiceVersion.Query request, CancellationToken ct) 

@@ -1,8 +1,14 @@
-﻿using Microsoft.OpenApi;
+﻿using Keycloak.AuthServices.Authentication;
+using Keycloak.AuthServices.Authorization;
+using Microsoft.OpenApi;
 using NLog;
 using NLog.Web;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using RabbitMQ.Client;
+using System.Reflection;
 using TangerineAuction.Infrastructure.Keycloak.Models;
+using TangerineAuction.Server.Authorization;
 using TangerineAuction.Server.HealthChecks;
 
 namespace TangerineAuction.Server.Extensions;
@@ -86,6 +92,28 @@ internal static class ServiceCollectionExtensions
         {
             s.SetEvaluationTimeInSeconds(300);
         }).AddInMemoryStorage();
+    }
+
+    public static void AddKeycloak(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddKeycloakWebApiAuthentication(configuration);
+        services.AddAuthorization(options =>
+            {
+                var admin = "Admin";
+                options.AddPolicy(Policy.AddTangerinePolicy, policy => policy.RequireRealmRoles(admin));
+                options.AddPolicy(Policy.GetTangerineGeneratorServiceVersion, policy => policy.RequireRealmRoles(admin));
+            })
+            .AddKeycloakAuthorization(configuration);
+    }
+
+    public static void AddJaeger(this IServiceCollection services)
+    {
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(Assembly.GetExecutingAssembly().GetName().Name!))
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter());
     }
     
 }

@@ -16,7 +16,7 @@ internal class BetRequestValidator : AbstractValidator<BetRequest>
             .SetAsyncValidator(new AuctionExistsValidator<BetRequest>(repository, x => x.AuctionId));
         
         RuleFor(x => x.Price)
-            .InclusiveBetween(1, 1000000)
-            .WithMessage("Ставка должна быть больше 0 и меньше 1 млн");
+            .InclusiveBetween(1, 2000000)
+            .WithMessage("Ставка должна быть больше 0 и меньше 2 млн");
     }
 }

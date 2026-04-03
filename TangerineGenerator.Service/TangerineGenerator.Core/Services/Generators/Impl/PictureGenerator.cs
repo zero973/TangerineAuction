@@ -1,33 +1,28 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using TangerineAuction.Shared;
+using TangerineAuction.Shared.Enums;
 using TangerineGenerator.Core.Models;
+using TangerineGenerator.Core.Services.FileStorages;
 using TangerineGenerator.Core.Services.ImageGeneration;
-using Path = System.IO.Path;
 
 namespace TangerineGenerator.Core.Services.Generators.Impl;
 
 internal class PictureGenerator : IPictureGenerator
 {
     
-    private readonly string _outputDirectory;
+    private readonly IFileStorage _fileStorage;
     private readonly List<IPainter> _painters;
 
-    public PictureGenerator(IEnumerable<IPainter> painters, IOptions<TangerineGeneratorOptions> options)
+    public PictureGenerator(IFileStorage fileStorage, IEnumerable<IPainter> painters)
     {
+        _fileStorage = fileStorage;
         _painters = painters.OrderBy(x => x.Object).ToList();
-        _outputDirectory = options.Value.PicturesOutputFolder;
-        Directory.CreateDirectory(_outputDirectory);
     }
 
     public async Task<string> Generate(TangerineQuality quality, CancellationToken ct = default)
     {
         var fileName = $"{Guid.NewGuid():N}.png";
-        var filePath = Path.Combine(_outputDirectory, fileName);
 
         using var image = new Image<Rgba32>(512, 512);
 
@@ -52,8 +47,13 @@ internal class PictureGenerator : IPictureGenerator
             _painters.ForEach(x => x.Paint(ctx, paintContext));
         });
 
-        await image.SaveAsync(filePath, new PngEncoder(), ct);
-        return filePath;
+        await using var stream = new MemoryStream();
+        await image.SaveAsPngAsync(stream, ct);
+        stream.Position = 0;
+
+        await _fileStorage.Save(stream, fileName, "image/png", ct);
+
+        return fileName;
     }
     
 }

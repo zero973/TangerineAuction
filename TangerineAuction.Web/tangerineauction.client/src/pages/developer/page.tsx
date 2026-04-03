@@ -11,6 +11,9 @@ export const DeveloperPage = () => {
                 <Anchor href="https://localhost:10001/healthchecks-ui" target="_blank" underline="hover">
                     Health checks
                 </Anchor>
+                <Anchor href="https://localhost:10001/hangfire" target="_blank" underline="hover">
+                    Hangfire
+                </Anchor>
                 <Anchor href="http://localhost:16686/search" target="_blank" underline="hover">
                     Jaeger
                 </Anchor>

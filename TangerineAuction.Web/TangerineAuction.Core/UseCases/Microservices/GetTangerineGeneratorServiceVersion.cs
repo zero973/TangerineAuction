@@ -1,6 +1,7 @@
 ﻿using Ardalis.Result;
 using MediatR;
 using TangerineAuction.Shared;
+using TangerineAuction.Shared.Models;
 
 namespace TangerineAuction.Core.UseCases.Microservices;
 

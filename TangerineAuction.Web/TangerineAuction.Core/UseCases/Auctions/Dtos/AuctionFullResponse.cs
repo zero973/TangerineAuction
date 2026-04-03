@@ -16,6 +16,12 @@ public class AuctionFullResponse
     /// Название
     /// </summary>
     public string Name { get; set; }
+    
+    /// <summary>
+    /// Активность аукциона.
+    /// true - принимает ставки. false - определён победитель
+    /// </summary>
+    public bool IsActual { get; set; }
 
     /// <summary>
     /// Мандарин
@@ -26,8 +32,6 @@ public class AuctionFullResponse
     /// Дата создания
     /// </summary>
     public DateTime CreatedOn { get; set; }
-    
-    public bool IsActual { get; set; }
     
     public List<BetResponse> Bets { get; set; }
 

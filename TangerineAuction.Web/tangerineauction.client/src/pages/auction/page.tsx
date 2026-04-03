@@ -12,9 +12,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useUnit } from "effector-react";
-import { BsCashCoin } from "react-icons/bs";
+import { BsCashCoin, BsCart2 } from "react-icons/bs";
 import { showError, showSuccess } from "@shared/notifications.tsx";
-import { $auction, $canCreateBetResult, addBet } from "@pages/auction/model.ts";
+import { $auction, $canCreateBetResult, addBet, buyTangerine } from "@pages/auction/model.ts";
 import { $user } from "@shared/api/auth/model.ts";
 
 export const AuctionPage = () => {
@@ -67,6 +67,18 @@ export const AuctionPage = () => {
         }
     };
 
+    const handleBuyTangerine = async () => {
+        try {
+            await buyTangerine({ id: auction!.auctionId });
+            showSuccess(`Вы успешно выкупили лот`);
+        } catch (err: any) {
+            showError({
+                title: err.response.data.title,
+                message: err.response.data.detail,
+            });
+        }
+    };
+
     if (!auction) {
         return (
             <Container>
@@ -96,6 +108,33 @@ export const AuctionPage = () => {
                             <Text fw={600} size="lg" ta="center" truncate>
                                 {auction!.name}
                             </Text>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "8px",
+                                    flexWrap: "nowrap",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {!auction.isActual && (
+                                    <Text
+                                        size="sm"
+                                        component="span"
+                                        style={{
+                                            display: "inline-block",
+                                            backgroundColor: "#db73eb",
+                                            padding: "2px 8px",
+                                            borderRadius: 9999,
+                                            color: "#fff",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        Завершён
+                                    </Text>
+                                )}
+                            </div>
                         </div>
                     </Grid.Col>
 
@@ -109,8 +148,12 @@ export const AuctionPage = () => {
                                 Качество: {tangerineQualityLabels[auction!.tangerine.quality]}
                             </Text>
 
+                            <Text size="lg" ta="left">
+                                Цена выкупа: {auction!.tangerine.buyPrice} ₽
+                            </Text>
+
                             <Image
-                                src={`https://localhost:10001/images/${auction!.tangerine.filePath}`}
+                                src={auction!.tangerine.imageUrl}
                                 fit="contain"
                                 radius="md"
                                 fallbackSrc="https://placehold.co/600x400?text=Placeholder"
@@ -169,6 +212,16 @@ export const AuctionPage = () => {
                                     leftSection={<BsCashCoin />}
                                 >
                                     Сделать ставку
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleBuyTangerine()}
+                                    h={42}
+                                    px="md"
+                                    leftSection={<BsCart2 />}
+                                >
+                                    Выкупить лот
                                 </Button>
                             </Group>
                         ) : "" }

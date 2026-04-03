@@ -23,10 +23,13 @@ internal class TangerineConfiguration : IEntityTypeConfiguration<Tangerine>
         builder.Property(x => x.StartPrice)
             .IsRequired();
 
-        builder.Property(x => x.FilePath)
+        builder.Property(x => x.BuyPrice)
+            .IsRequired();
+
+        builder.Property(x => x.FileName)
             .HasColumnType("text")
             .IsRequired()
-            .HasMaxLength(300);
+            .HasMaxLength(100);
 
         builder.Property(x => x.CreatedOn)
             .IsRequired();

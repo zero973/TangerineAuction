@@ -94,6 +94,7 @@ public class ModuleInstaller : IModuleInstaller
         services.AddScoped<IMigrationService, MigrationService>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped(typeof(IReadRepository<>), typeof(EfReadRepository<>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         #endregion
 
@@ -144,8 +145,6 @@ public class ModuleInstaller : IModuleInstaller
         
         services.AddMassTransit(x =>
         {
-            x.AddConsumer<OnTangerineCreatedConsumer>();
-            
             x.AddEntityFrameworkOutbox<AppDbContext>(o =>
             {
                 o.QueryDelay = TimeSpan.FromSeconds(30);

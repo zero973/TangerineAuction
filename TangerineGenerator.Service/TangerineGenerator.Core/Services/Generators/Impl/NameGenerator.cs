@@ -1,4 +1,4 @@
-﻿using TangerineAuction.Shared;
+﻿using TangerineAuction.Shared.Enums;
 
 namespace TangerineGenerator.Core.Services.Generators.Impl;
 

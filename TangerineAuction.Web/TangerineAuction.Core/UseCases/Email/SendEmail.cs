@@ -7,7 +7,7 @@ namespace TangerineAuction.Core.UseCases.Email;
 public class SendEmail
 {
     
-    public record Command(string Receiver, string Topic, string Body, string? TangerineFilePath = null) : IRequest<Result>;
+    public record Command(string Receiver, string Topic, string Body, string? ImageUrl = null) : IRequest<Result>;
     
     internal class Validator : AbstractValidator<Command>
     {
@@ -30,9 +30,10 @@ public class SendEmail
                 .WithMessage("Сообщение не должно быть пустым")
                 .MaximumLength(5000);
 
-            RuleFor(x => x.TangerineFilePath)
-                .Must(x => x == null || File.Exists(x))
-                .WithMessage("Не найден файл с мандаринкой");
+            RuleFor(x => x.ImageUrl)
+                .Must(value => value == null || Uri.TryCreate(value, UriKind.Absolute, out var uriResult)
+                    && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                .WithMessage("Ссылка на картинку должна быть валидной");
         }
     }
     

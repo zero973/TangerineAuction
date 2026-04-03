@@ -1,8 +1,8 @@
-﻿using TangerineAuction.Shared;
+﻿using TangerineAuction.Shared.Enums;
 
 namespace TangerineGenerator.Core.Services.Generators;
 
 public interface IPriceGenerator
 {
-    decimal Generate(TangerineQuality quality);
+    (decimal StartPrice, decimal BuyPrice) Generate(TangerineQuality quality);
 }

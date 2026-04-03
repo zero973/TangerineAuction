@@ -1,4 +1,4 @@
-﻿using TangerineAuction.Shared;
+﻿using TangerineAuction.Shared.Enums;
 
 namespace TangerineAuction.Core.Models;
 
@@ -24,9 +24,14 @@ public class Tangerine : BaseEntity, IAggregateRoot
     public decimal StartPrice { get; private set; }
     
     /// <summary>
-    /// Путь к картинке
+    /// Цена выкупа
     /// </summary>
-    public string FilePath { get; private set; }
+    public decimal BuyPrice { get; private set; }
+    
+    /// <summary>
+    /// Название файла-картинки в хранилище
+    /// </summary>
+    public string FileName { get; private set; }
 
     /// <summary>
     /// Дата создания
@@ -37,18 +42,19 @@ public class Tangerine : BaseEntity, IAggregateRoot
     // ReSharper disable once UnusedMember.Local
     private Tangerine() {}
 
-    private Tangerine(string name, TangerineQuality quality, decimal startPrice, string filePath)
+    private Tangerine(string name, TangerineQuality quality, decimal startPrice, decimal buyPrice, string fileName)
     {
         Name = name;
         Quality = quality;
         StartPrice = startPrice;
-        FilePath = filePath;
+        BuyPrice = buyPrice;
+        FileName = fileName;
         CreatedOn = DateTime.UtcNow;
     }
     
-    public static Tangerine Create(string name, TangerineQuality quality, decimal startPrice, string filePath)
+    public static Tangerine Create(string name, TangerineQuality quality, decimal startPrice, decimal buyPrice, string fileName)
     {
-        return new Tangerine(name, quality, startPrice, filePath);
+        return new Tangerine(name, quality, startPrice, buyPrice, fileName);
     }
     
 }

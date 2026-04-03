@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace TangerineAuction.Shared;
+namespace TangerineAuction.Shared.Models;
 
 [DataContract]
 public class VersionInfo

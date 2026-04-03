@@ -9,7 +9,10 @@ using TangerineAuction.Core.UseCases.Email;
 
 namespace TangerineAuction.Infrastructure.Email;
 
-internal class SendEmailRequestHandler(IOptions<SmtpOptions> smtpOptions, ILogger<SendEmailRequestHandler> logger) 
+internal class SendEmailRequestHandler(
+    IOptions<SmtpOptions> smtpOptions,
+    IHttpClientFactory httpClientFactory,
+    ILogger<SendEmailRequestHandler> logger)
     : IRequestHandler<SendEmail.Command, Result>
 {
     public async Task<Result> Handle(SendEmail.Command request, CancellationToken ct)
@@ -21,54 +24,57 @@ internal class SendEmailRequestHandler(IOptions<SmtpOptions> smtpOptions, ILogge
         message.To.Add(MailboxAddress.Parse(request.Receiver));
         message.Subject = request.Topic;
 
-        var body = new TextPart("plain")
+        var multipart = new Multipart("related");
+
+        var htmlBody = new TextPart("html")
         {
-            Text = request.Body
+            Text = $"""
+                    <div style="white-space: pre-wrap; font-family: Arial, sans-serif;">
+                    {request.Body}
+                    </div>
+                    <img src="cid:image1" />
+                    """
         };
 
-        var multipart = new Multipart("mixed");
-        multipart.Add(body);
-
-
-        if (request.TangerineFilePath != null)
-        {
-            var attachment = new MimePart("image", "png")
-            {
-                Content = new MimeContent(File.OpenRead(request.TangerineFilePath)),
-                ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
-                ContentTransferEncoding = ContentEncoding.Base64,
-                FileName = Path.GetFileName(request.TangerineFilePath)
-            };
-
-            multipart.Add(attachment);
-        }
-
-        message.Body = multipart;
-
-        using var client = new SmtpClient();
-
-        var secureSocketOption = options.UseSsl
-            ? SecureSocketOptions.SslOnConnect
-            : SecureSocketOptions.StartTlsWhenAvailable;
+        multipart.Add(htmlBody);
 
         try
         {
-            await client.ConnectAsync(options.Host, options.Port, secureSocketOption, ct);
-
-            if (!string.IsNullOrWhiteSpace(options.UserName))
+            if (!string.IsNullOrWhiteSpace(request.ImageUrl))
             {
-                await client.AuthenticateAsync(options.UserName, options.Password, ct);
+                var httpClient = httpClientFactory.CreateClient();
+                var imageBytes = await httpClient.GetByteArrayAsync(request.ImageUrl, ct);
+                var imageStream = new MemoryStream(imageBytes);
+
+                var attachment = new MimePart("image", "png")
+                {
+                    Content = new MimeContent(imageStream),
+                    ContentDisposition = new ContentDisposition(ContentDisposition.Inline),
+                    ContentTransferEncoding = ContentEncoding.Base64,
+                    ContentId = "image1",
+                    FileName = Path.GetFileName(new Uri(request.ImageUrl).LocalPath)
+                };
+
+                multipart.Add(attachment);
             }
 
+            message.Body = multipart;
+
+            var secureSocketOption = options.UseSsl
+                ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTlsWhenAvailable;
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(options.Host, options.Port, secureSocketOption, ct);
+            await client.AuthenticateAsync(options.UserName, options.Password, ct);
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
+
+            return Result.Success();
         }
         catch (Exception e)
         {
             logger.LogError(e, "Ошибка при отправке сообщения");
             return Result.Error("Ошибка при отправке сообщения");
         }
-
-        return Result.Success();
     }
 }

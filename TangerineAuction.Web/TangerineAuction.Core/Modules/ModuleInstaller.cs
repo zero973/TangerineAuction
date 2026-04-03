@@ -2,7 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TangerineAuction.Core.Behaviors;
-using TangerineAuction.Core.Services.BackgroundServices;
+using TangerineAuction.Core.Jobs;
+using TangerineAuction.Shared.Hangfire;
 
 namespace TangerineAuction.Core.Modules;
 
@@ -20,8 +21,9 @@ public class ModuleInstaller : IModuleInstaller
             cfg.RegisterServicesFromAssemblies(typeof(ModuleInstaller).Assembly);
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
-        
-        services.AddHostedService<DeleteAuctionService>();
+
+        services.AddScoped<IRecurringJob, FinishAuctionJob>();
+        services.AddScoped<IRecurringJob, CreateTangerineJob>();
     }
     
 }

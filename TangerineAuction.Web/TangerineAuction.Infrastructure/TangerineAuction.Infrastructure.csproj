@@ -36,7 +36,7 @@
       <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.2.2" />
       <PackageReference Include="Refit" Version="10.1.6" />
       <PackageReference Include="Refit.HttpClientFactory" Version="10.1.6" />
-      <PackageReference Include="TangerineGenerator.Shared" Version="1.0.0" />
+      <PackageReference Include="TangerineGenerator.Shared" Version="1.0.1" />
       <PackageReference Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.6.0" />
       <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.6.0" />
     </ItemGroup>

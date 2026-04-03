@@ -64,7 +64,8 @@ namespace TangerineAuction.Infrastructure.Migrations
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     quality = table.Column<int>(type: "integer", nullable: false),
                     start_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    file_path = table.Column<string>(type: "text", maxLength: 300, nullable: false),
+                    buy_price = table.Column<decimal>(type: "numeric", nullable: false),
+                    file_name = table.Column<string>(type: "text", maxLength: 100, nullable: false),
                     created_on = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -159,6 +160,13 @@ namespace TangerineAuction.Infrastructure.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_auctions_created_on",
+                schema: "data",
+                table: "auctions",
+                column: "created_on",
+                filter: "is_actual = true");
 
             migrationBuilder.CreateIndex(
                 name: "ix_auctions_is_actual",

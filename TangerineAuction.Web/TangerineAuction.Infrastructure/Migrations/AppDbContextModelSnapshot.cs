@@ -276,6 +276,10 @@ namespace TangerineAuction.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_auctions");
 
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("ix_auctions_created_on")
+                        .HasFilter("is_actual = true");
+
                     b.HasIndex("IsActual")
                         .HasDatabaseName("ix_auctions_is_actual");
 
@@ -328,15 +332,19 @@ namespace TangerineAuction.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<decimal>("BuyPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("buy_price");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on");
 
-                    b.Property<string>("FilePath")
+                    b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(300)
+                        .HasMaxLength(100)
                         .HasColumnType("text")
-                        .HasColumnName("file_path");
+                        .HasColumnName("file_name");
 
                     b.Property<string>("Name")
                         .IsRequired()

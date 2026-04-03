@@ -20,7 +20,7 @@ public class AddTangerine
         public async Task<Result<TangerineResponse>> Handle(Command request, CancellationToken ct)
         {
             var report = Tangerine.Create(request.Request.Name, request.Request.Quality, request.Request.StartPrice, 
-                request.Request.FilePath);
+                request.Request.BuyPrice, request.Request.FileName);
             var result = await repository.AddAsync(report, ct);
             return new TangerineResponse(result);
         }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TangerineGenerator.Core.Models;
-using TangerineGenerator.Core.Services.BackgroundServices;
 using TangerineGenerator.Core.Services.Generators;
 using TangerineGenerator.Core.Services.Generators.Impl;
 using TangerineGenerator.Core.Services.ImageGeneration;
@@ -15,8 +14,6 @@ internal class ModuleInstaller : IModuleInstaller
 
     public void Install(IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<TangerineGeneratorOptions>(configuration.GetSection("TangerineGenerationOptions"));
-        
         var painterInterface = typeof(IPainter);
         var painterTypes = painterInterface.Assembly.GetTypes()
             .Where(x => x is { IsClass: true, IsAbstract: false } && typeof(IPainter).IsAssignableFrom(x));
@@ -31,8 +28,6 @@ internal class ModuleInstaller : IModuleInstaller
         {
             cfg.RegisterServicesFromAssemblies(typeof(ModuleInstaller).Assembly);
         });
-        
-        services.AddHostedService<TangerineCreationService>();
     }
     
 }

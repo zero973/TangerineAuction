@@ -25,6 +25,8 @@ internal class AuctionConfiguration() : IEntityTypeConfiguration<Auction>
             .IsRequired();
         
         builder.HasIndex(e => e.Name).HasFilter("is_actual = true");
+        
+        builder.HasIndex(e => e.CreatedOn).HasFilter("is_actual = true");
 
         builder.HasIndex(e => e.IsActual);
             

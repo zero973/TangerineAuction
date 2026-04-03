@@ -30,7 +30,7 @@ public class AddBet
             
             await repository.SaveChangesAsync(ct);
             
-            await publisher.Publish(new AddedBetNotification(request.Request.AuctionId), ct);
+            await publisher.Publish(new BetAdded.Notification(request.Request.AuctionId), ct);
             
             return Result.Success(new BetResponse(bet));
         }

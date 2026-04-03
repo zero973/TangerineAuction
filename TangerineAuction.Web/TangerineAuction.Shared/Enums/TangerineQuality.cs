@@ -1,4 +1,4 @@
-﻿namespace TangerineAuction.Shared;
+﻿namespace TangerineAuction.Shared.Enums;
 
 /// <summary>
 /// Качества мандарина

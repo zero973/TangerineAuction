@@ -1,26 +1,43 @@
-﻿using TangerineAuction.Shared;
+﻿using TangerineAuction.Shared.Enums;
+using TangerineAuction.Shared.Models;
 
 namespace TangerineAuction.Core.UseCases.Tangerines.Dtos;
 
 public class TangerineRequest
 {
+    
     /// <summary>
     /// Название
     /// </summary>
-    public required string Name { get; set; }
+    public string Name { get; }
     
     /// <summary>
     /// Качество
     /// </summary>
-    public required TangerineQuality Quality { get; set; }
+    public TangerineQuality Quality { get; }
     
     /// <summary>
     /// Начальная цена
     /// </summary>
-    public required decimal StartPrice { get; set; }
+    public decimal StartPrice { get; }
     
     /// <summary>
-    /// Путь к картинке
+    /// Цена выкупа
     /// </summary>
-    public required string FilePath { get; set; }
+    public decimal BuyPrice { get; }
+    
+    /// <summary>
+    /// Название файла-картинки
+    /// </summary>
+    public string FileName { get; }
+
+    public TangerineRequest(TangerineInfo tangerine)
+    {
+        Name = tangerine.Name;
+        Quality = tangerine.Quality;
+        StartPrice = tangerine.StartPrice;
+        BuyPrice = tangerine.BuyPrice;
+        FileName = tangerine.FileName;
+    }
+    
 }

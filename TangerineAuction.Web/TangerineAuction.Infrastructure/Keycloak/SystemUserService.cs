@@ -16,7 +16,7 @@ internal class SystemUserService(
     : ISystemUserService, IHostedService
 {
     
-    private readonly SemaphoreSlim _sync = new(1, 1);
+    private readonly SemaphoreSlim _lock = new(1, 1);
     private KeycloakUserDto? _user;
 
     public Guid UserId
@@ -41,7 +41,7 @@ internal class SystemUserService(
         if (_user is not null)
             return;
 
-        await _sync.WaitAsync(ct);
+        await _lock.WaitAsync(ct);
         try
         {
             if (_user is not null)
@@ -104,7 +104,7 @@ internal class SystemUserService(
         }
         finally
         {
-            _sync.Release();
+            _lock.Release();
         }
     }
 

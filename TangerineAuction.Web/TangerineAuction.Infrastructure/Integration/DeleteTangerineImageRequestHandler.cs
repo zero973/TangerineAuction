@@ -4,9 +4,9 @@ using TangerineGenerator.Shared;
 
 namespace TangerineAuction.Infrastructure.Integration;
 
-internal class DeleteTangerineImageHandler(ITangerineGeneratorService generatorService) 
+internal class DeleteTangerineImageRequestHandler(ITangerineGeneratorService generatorService) 
     : IRequestHandler<DeleteTangerineImage.Command>
 {
     public Task Handle(DeleteTangerineImage.Command request, CancellationToken ct)
-        => generatorService.DeleteImage(request.FilePath).AsTask();
+        => generatorService.DeleteImage(request.FileName, ct);
 }

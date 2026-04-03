@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using TangerineGenerator.Shared;
 using System.Reflection;
-using TangerineAuction.Shared;
-using TangerineGenerator.Core.Models;
-using TangerineGenerator.Shared;
+using TangerineAuction.Shared.Models;
+using TangerineGenerator.Core.Services.FileStorages;
 
 namespace TangerineGenerator.Core.Services.Shared;
 
-public class TangerineGeneratorService(IOptions<TangerineGeneratorOptions> options) : ITangerineGeneratorService
+public class TangerineGeneratorService(IFileStorage storage) : ITangerineGeneratorService
 {
     
     public ValueTask<VersionInfo> GetVersion()
@@ -20,12 +19,20 @@ public class TangerineGeneratorService(IOptions<TangerineGeneratorOptions> optio
         });
     }
 
-    public ValueTask DeleteImage(string filePath)
+    public Task DeleteImage(string fileName, CancellationToken ct) => storage.Delete(fileName, ct);
+    
+    public async Task<Dictionary<string, string>> GetPhotoUrls(List<string> tangerineFileNames, CancellationToken ct)
     {
-        var file = Path.Combine(options.Value.PicturesOutputFolder, filePath);
-        if (File.Exists(file))
-            File.Delete(file);
-        return ValueTask.CompletedTask;
+        var result = new Dictionary<string, string>();
+        foreach (var fileName in tangerineFileNames)
+        {
+            if (ct.IsCancellationRequested)
+                return result;
+            
+            var url = await storage.GetFileUrl(fileName);
+            result.Add(fileName, url);
+        }
+        return result;
     }
     
 }

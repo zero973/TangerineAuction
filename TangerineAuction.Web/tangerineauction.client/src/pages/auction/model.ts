@@ -3,38 +3,13 @@ import { createEffect, createStore, sample } from "effector";
 import { requestFx } from "@shared/api/request.ts";
 import { showError } from "@shared/notifications";
 import { routes } from "@shared/routes";
-import { TangerineQuality } from "@pages/home/model.ts";
+import { getLastBetFx } from "@shared/api/bets/model.ts";
+import { hubMessageReceived } from "@shared/api/signalr/model.ts";
+import { HubMessageType } from "@shared/api/contracts/hub.ts";
+import { AuctionFullResponse } from "@shared/api/contracts/auction.ts";
+import { AddBetBody, BetResponse } from "@shared/api/contracts/bet.ts";
 
 export const auctionPageRoute = routes.auction;
-
-export type TangerineResponse = {
-    id: string;
-    name: string;
-    quality: TangerineQuality;
-    startPrice: number;
-    filePath: string;
-    createdOn: string;
-};
-
-export type BetResponse = {
-    id: string;
-    price: number;
-    createdOn: string;
-    createdBy: string;
-};
-
-export type AuctionFullResponse = {
-    auctionId: string;
-    name: string;
-    tangerine: TangerineResponse;
-    createdOn: string;
-    bets: BetResponse[];
-};
-
-export type AddBetBody = {
-    auctionId: string;
-    price: number;
-};
 
 export const getAuction = createEffect<{ id: string }, AuctionFullResponse>((params) => {
     return requestFx({
@@ -64,10 +39,20 @@ export const addBet = createEffect<AddBetBody, BetResponse>((body) => {
     });
 });
 
+export const buyTangerine = createEffect<{ id: string }, null>((body) => {
+    return requestFx({
+        method: "POST",
+        path: "Bets/BuyTangerine",
+        body,
+    });
+});
+
 export const $auction = createStore<AuctionFullResponse | null>(null)
     .on(getAuction.doneData, (_, p) => p)
-    .on(addBet.doneData, (auction, bet) => {
-        if (!auction) return auction;
+    .on(getLastBetFx.doneData, (auction, { id, bet }) => {
+        if (!auction || auction.auctionId !== id) {
+            return auction;
+        }
 
         return {
             ...auction,
@@ -94,6 +79,34 @@ chainRoute({
         effect: loadAuctionPage,
         mapParams: ({ params }) => ({ id: params.id }),
     },
+});
+
+sample({
+    clock: hubMessageReceived,
+    source: $auction,
+    filter: (auction, msg) =>
+        Boolean(auction) &&
+        auction!.auctionId === msg.entityId &&
+        msg.type === HubMessageType.AuctionFinished,
+    fn: (_, msg) => ({ id: msg.entityId }),
+    target: getAuction,
+});
+
+sample({
+    clock: hubMessageReceived,
+    source: $auction,
+    filter: (auction, msg) =>
+        Boolean(auction) &&
+        auction!.auctionId === msg.entityId &&
+        msg.type === HubMessageType.NewBetAdded,
+    fn: (_, msg) => ({ id: msg.entityId }),
+    target: getAuction,
+});
+
+sample({
+    clock: getAuction.done,
+    fn: ({ params }) => ({ auctionId: params.id }),
+    target: canCreateBet,
 });
 
 sample({

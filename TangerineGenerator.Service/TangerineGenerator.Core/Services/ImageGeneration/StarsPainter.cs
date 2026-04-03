@@ -2,7 +2,7 @@
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Processing;
-using TangerineAuction.Shared;
+using TangerineAuction.Shared.Enums;
 using TangerineGenerator.Core.Enums;
 using TangerineGenerator.Core.Models;
 

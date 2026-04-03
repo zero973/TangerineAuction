@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using TangerineAuction.Shared;
-using TangerineGenerator.Core.Notifications;
+using TangerineAuction.Shared.Enums;
+using TangerineAuction.Shared.Models;
 using TangerineGenerator.Core.Services.Generators;
 
 namespace TangerineGenerator.Core.Commands;
@@ -15,7 +15,6 @@ public class CreateTangerine
         INameGenerator nameGenerator, 
         IPriceGenerator priceGenerator, 
         IPictureGenerator pictureGenerator,
-        IPublisher publisher,
         ILogger<RequestHandler> logger) 
         : IRequestHandler<Command, TangerineInfo>
     {
@@ -30,14 +29,12 @@ public class CreateTangerine
             };
         
             var name = nameGenerator.Generate(quality);
-            var price = priceGenerator.Generate(quality);
-            var picturePath = await pictureGenerator.Generate(quality, ct);
+            var (startPrice, buyPrice) = priceGenerator.Generate(quality);
+            var fileName = await pictureGenerator.Generate(quality, ct);
 
-            var tangerine = new TangerineInfo(name, quality, price, Path.GetFileName(picturePath),DateTime.UtcNow);
+            var tangerine = new TangerineInfo(name, quality, startPrice, buyPrice, fileName, DateTime.UtcNow);
 
-            logger.LogInformation($"Created tangerine: {tangerine}");
-            
-            await publisher.Publish(new OnTangerineGeneratedNotification(tangerine), ct);
+            logger.LogInformation("Created tangerine: {TangerineInfo}", tangerine);
         
             return tangerine;
         }
